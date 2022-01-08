@@ -1,0 +1,26 @@
+<!-- <app-layout heading="Simple Dynamic Form">
+
+</app-layout> -->
+
+<form [formGroup]="form">
+
+  <!-- DYNAMIC FORM STARTS HERE -->
+  <dyn-form
+    [config]="config"
+    [form]="form"
+    [mode]="mode"
+  ></dyn-form>
+  <!-- DYNAMIC FORM ENDS HERE -->
+
+  <div class="form-actions">
+    <!-- <button type="button" mat-raised-button color="primary" (click)="toggleMode()">
+      {{ mode === 'edit' ? 'Switch to Display mode' : 'Back to Edit mode' }}
+    </button> -->
+    <button mat-raised-button color="primary" [disabled]="form.invalid"
+    [mat-dialog-close]="form.value">{{button}} </button>
+<button mat-raised-button color="warn" (click)="close()">Cancel</button>
+    <!-- <button type="button" mat-raised-button color="accent" (click)="loadData()">
+      Load Data
+    </button> -->
+  </div>
+</form>
