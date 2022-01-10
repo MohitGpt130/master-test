@@ -1,12 +1,15 @@
+import { faultInterface, FaultCauseData } from './fault.form';
 import { SimpleDialogComponent } from './simple-dialog/simple-dialog.component';
-import { AfterViewInit, Component, VERSION, ViewChild, OnInit } from '@angular/core';
+import { AfterViewInit, Component, VERSION, ViewChild, OnInit, Input } from '@angular/core';
 import { FormArray, FormControl, FormGroup } from '@angular/forms';
 import { DynFormComponent } from '@myndpm/dyn-forms';
-import { simpleData, simpleForm } from './simple.form';
+import {operatorInterface, operatorData } from './simple.form';
 import { MatDialog } from '@angular/material/dialog';
 import { MatTableDataSource } from '@angular/material/table';
 import { HttpClient } from '@angular/common/http';
 import { Router,ActivatedRoute } from '@angular/router';
+import { MatPaginator } from '@angular/material/paginator';
+import { MatSort } from '@angular/material/sort';
 
 interface OperatorEntry {
   operatorEntryname: string;
@@ -21,32 +24,33 @@ interface OperatorEntry {
   styleUrls: ['./simple.component.scss']
 })
 export class SimpleComponent implements  OnInit {
-  displayedColumns: string[] | undefined;// = ['position', 'name', 'weight', 'symbol'];
+  displayedColumns: string[] | undefined;
   gotData = false;
-  vdisplayedColumns: string[] | undefined;
+  @ViewChild(MatPaginator, { static: true }) paginator: MatPaginator;
+  @ViewChild(MatSort, { static: true }) sort: MatSort;
+
+  vdisplayedColumns: string[];
   public Gtype: OperatorEntry[] = [];
   type;
-  // public globalKeys: any[];
-  // public globalKeys: any[];
-  dataSource: MatTableDataSource<OperatorEntry>;
+  displayedColumnsAs;
 
-
-  displayedColumnsAs = {
-    operatorEntryname: { 'DN': 'Name', 'visible': false },
-    operatorEntrycode: { 'DN': 'Code', 'visible': false },
-    operatorEntryorigin: { 'DN': 'Origin', 'visible': true },
-    operatorEntrydisplayName: { 'DN': 'Display Name', 'visible': false },
-    operatorEntryid: { 'DN': 'Operator ID', 'visible': true }
-  }
+  dataSource: MatTableDataSource<any>;
 
   constructor(private activatedRoute: ActivatedRoute ,public dialog: MatDialog, private httpClient: HttpClient){
 
   }
 ngOnInit(): void {
-  this.GetOperatorEntryData();
-  this.activatedRoute.paramMap.subscribe((p)=>{
+  // this.GetOperatorEntryData();
+  this.activatedRoute.paramMap.subscribe( (p)=>{
     this.type = p.get('type');
+    if(this.type === 'operator'){
+      this.generateTableData(operatorInterface, operatorData);
+    }else if(this.type === 'fault-cause'){
+      this.generateTableData(faultInterface,FaultCauseData)
+    }
   })
+
+
 }
 
 
@@ -83,7 +87,7 @@ ngOnInit(): void {
       ,
       data: {
         dataKey: {
-          rowdata: {operator : data},
+          rowdata: {data : data},
           title: 'Update Details',
           button: 'Update',
           type: this.type
@@ -142,5 +146,42 @@ ngOnInit(): void {
   }
 
 
+  applyFilter(filterValue: string) {
+    this.dataSource.filter = filterValue.trim().toLowerCase();
+    //console.log(this.dataSource.paginator);
+    if (this.dataSource.paginator) {
+      this.dataSource.paginator.firstPage();
+    }
+  }
 
+
+
+  generateTableData(tableInterFace,tableData ){
+    this.vdisplayedColumns = [];
+      console.log(tableData,'Here');
+      setTimeout(() => {
+        console.log(tableInterFace);
+        this.displayedColumnsAs = tableInterFace ;
+        for (let i = 0; i < Object.keys(tableData[0]).length; i++) {
+            this.vdisplayedColumns.push(Object.keys(tableData[0])[i])
+        }
+        this.vdisplayedColumns.push('star');
+        this.dataSource =  new MatTableDataSource( tableData);
+        this.displayedColumns = this.vdisplayedColumns ;
+        // console.log(this.displayedColumns.length);
+          this.dataSource.paginator = this.paginator;
+        (tableData.length> 0) ? (this.gotData = true) : (this.gotData = false);
+        console.log(this.displayedColumns, this.displayedColumnsAs);
+
+      }, 600);
+
+  }
+
+  postData(postApi, postData){
+    console.log(postData, postApi);
+    // this.httpClient.post(postApi, JSON.stringify(postData)).subscribe((res: any)=>{
+
+    // })
+
+  }
 }

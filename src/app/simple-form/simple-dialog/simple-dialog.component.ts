@@ -2,7 +2,8 @@ import { Component, OnInit, ViewChild, AfterViewInit, Inject } from '@angular/co
 import { FormGroup, FormArray, FormControl } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { DynFormComponent } from '@myndpm/dyn-forms';
-import { simpleForm,simpleForm2, simpleData } from '../simple.form';
+import { faultCauseForm } from '../fault.form';
+import { operatorForm } from '../simple.form';
 
 
 @Component({
@@ -23,9 +24,9 @@ export class SimpleDialogComponent implements OnInit, AfterViewInit {
   console.log(this.data);
 
   if(this.data.dataKey.type === 'operator'){
-    this.config= simpleForm;
-  }else if(this.data.dataKey.type === 'fault'){
-    this.config = simpleForm2;
+    this.config= operatorForm;
+  }else if(this.data.dataKey.type === 'fault-cause'){
+    this.config = faultCauseForm;
   }
   if (this.data.dataKey.hasOwnProperty('rowdata')) {
     // console.log(simpleData, 'SIMPLE DATA');
@@ -52,25 +53,11 @@ export class SimpleDialogComponent implements OnInit, AfterViewInit {
   }
 
 
-  loadData(): void {
-    // we can load data AfterViewInit
-    this.dynForm.patchValue(simpleData);
-  }
 
 
 
-  private markAsUntouched(group: FormGroup | FormArray): void {
-    group.markAsUntouched();
 
-    Object.keys(group.controls).map((field) => {
-      const control = group.get(field);
-      if (control instanceof FormControl) {
-        control.markAsUntouched();
-      } else if (control instanceof FormGroup) {
-        this.markAsUntouched(control);
-      }
-    });
-  }
+
 
   close(){
     this.dialogRef.close();

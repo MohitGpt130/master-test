@@ -6,37 +6,60 @@ import {
 import { DynFormConfig } from '@myndpm/dyn-forms';
 
 
-export const PostOperatorApi = 'https://capl91gn.smartfactoryworx.tech/api/manual/postoperator';
 
-function getOperatorData(){
-  var operatorData = [];
-   fetch('https://capl91gn.smartfactoryworx.tech/api/manual/getoperator?origin=all').then((response)=>
+
+
+export const faultInterface = {
+  machine_id: { 'DN': 'Machine Id', 'visible': true },
+  machine_name: { 'DN': 'Machine Name', 'visible': false },
+  fault_name: { 'DN': 'Fault Name', 'visible': true },
+  cause_name: { 'DN': 'Cause name', 'visible': false },
+  machine_state: { 'DN': 'Machine State', 'visible': false },
+  _id: { 'DN': 'ID', 'visible': true }
+}
+
+function getFaultCauseData(){
+  var Data = [];
+   fetch('https://capl91gn.smartfactoryworx.tech/api/manual/faultCause?line_id=5ecc8663c4100a70cc4a8d08&machine_state=fault').then((response)=>
     response.json()
    ).then((data: any)=>{
      console.log(data);
-      data.forEach((e)=> delete e.__v && delete e.createdAt && delete e.updatedAt);
-     console.log(data);
-     data.forEach(elm => {
-      operatorData.push(elm);
+      data.forEach(elm => {
+      Data.push({
+        _id: elm._id,
+        machine_id: elm.machine_name === null ? '' : elm.machine_name._id,
+        machine_name: elm.machine_name === null ? '' : elm.machine_name.display_name,
+        fault_name: elm.fault_name,
+        cause_name: elm.cause_name,
+      });
      });
    })
 
-   return operatorData;
+   return Data;
  }
 
-export const operatorData = getOperatorData();
+ export const FaultCauseData = getFaultCauseData();
+
+function getMachineData(){
+ var dropDownOptions = [{text: '- Choose one -', value: null}];
+  fetch('https://capl91gn.smartfactoryworx.tech/api/manual/equipment/5ecc8663c4100a70cc4a8d08?type=machine').then((response)=>
+   response.json()
+  ).then((data: any)=>{
+    console.log(data);
+
+    data.forEach(elm => {
+      dropDownOptions.push({text: elm.display_name, value: elm._id})
+    });
+  })
+
+  return dropDownOptions;
+}
 
 
 
-export const operatorInterface = {
-    code: { 'DN': 'Code', 'visible': false },
-    display_name: { 'DN': 'Display Name', 'visible': false },
-    operator_name: { 'DN': 'Name', 'visible': false },
-    _id: { 'DN': 'Operator ID', 'visible': true },
-    operatorEntryorigin: { 'DN': 'Origin', 'visible': true },
 
-  }
-export const operatorForm: DynFormConfig<'edit'|'display'> = { // typed mode
+
+export const faultCauseForm: DynFormConfig<'edit'|'display'> = { // typed mode
   modeParams: {
     edit: { readonly: false },
     display: { readonly: true },
@@ -46,52 +69,50 @@ export const operatorForm: DynFormConfig<'edit'|'display'> = { // typed mode
       name: 'data',
       factory: { cssClass: 'row' },
       params: {
-        title: 'Add Operator',
+        title: 'Add Fault',
         subtitle: 'Please fill the required fields',
       },
       controls: [
-        createMatConfig('INPUT', {
-          name: 'operator_name',
-          options: { validators: ['required'] },
-          factory: { cssClass: 'col-sm-6 col-md-4' },
-          params: { label: 'Operator Name *' },
-        }),
+        // createMatConfig('INPUT', {
+        //   name: 'operatorEntryname',
+        //   options: { validators: ['required'] },
+        //   factory: { cssClass: 'col-sm-6 col-md-4' },
+        //   params: { label: 'Operator Name *' },
+        // }),
+        // createMatConfig('INPUT', {
+        //   name: 'operatorEntryid',
+        //   // options: { validators: ['required'] },
+        //   // factory: { cssClass: 'col-sm-6 col-md-4' },
+        //   params: { invisible : true},
+
+        // }),
+        // createMatConfig('INPUT', {
+        //   name: 'operatorEntrycode',
+        //   options: { validators: null },
+        //   factory: { cssClass: 'col-sm-6 col-md-4' },
+        //   params: { label: 'Operator Code *' },
+        // }),
+        // createMatConfig('DIVIDER', {
+        //   params: { invisible: true },
+        // }),
+
         createMatConfig('INPUT', {
           name: '_id',
-          // options: { validators: ['required'] },
-          factory: { cssClass: 'col-sm6' },
-          params: {label: 'Operator Id' ,invisible : true},
-
-        }),
-        createMatConfig('INPUT', {
-          name: 'code',
           options: { validators: null },
-          factory: { cssClass: 'col-sm-6 col-md-4' },
-          params: { label: 'Operator Code *' },
-        }),
-        createMatConfig('DIVIDER', {
-          params: { invisible: true },
-        }),
-        createMatConfig('INPUT', {
-          name: 'display_name',
-          options: { validators: ['required'] },
           factory: { cssClass: 'col-12 col-md-8' },
-          params: { label: 'Display Name *' },
+          params: { label: 'Fault id' },
         }),
 
-        createMatConfig('DIVIDER', {
-          params: { invisible: true },
-        }),
         createMatConfig('SELECT', {
-          name: 'operatorEntryorigin',
+          name: 'machine_id',
           options: {
             defaults: 'CO',
             // validators: ['required'],
           },
-          factory: { cssClass: 'col-sm-6 col-md-4' },
+          factory: { cssClass: 'col-12 col-md-8' },
           params: {
-            label: 'Origin',
-            options: [{text: '- Choose one -', value: undefined}, {text: 'Contract', value: 'contract'}, {text: 'Permanent', value: 'Permanent'}],
+            label: 'Select Machine*',
+            options: getMachineData(),
           },
           modes: {
             display: {
@@ -99,6 +120,15 @@ export const operatorForm: DynFormConfig<'edit'|'display'> = { // typed mode
               paramFns: { getValue: 'getOptionText' }
             },
           },
+        }),
+        createMatConfig('DIVIDER', {
+          params: { invisible: true },
+        }),
+        createMatConfig('INPUT', {
+          name: 'cause_name',
+          options: { validators: ['required'] },
+          factory: { cssClass: 'col-12 col-md-8' },
+          params: { label: 'Fault Description *' },
         }),
         // createMatConfig('INPUT', {
         //   name: 'zipCode',
@@ -166,6 +196,3 @@ export const operatorForm: DynFormConfig<'edit'|'display'> = { // typed mode
     // }),
   ],
 };
-
-
-
